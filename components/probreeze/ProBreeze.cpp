@@ -90,10 +90,16 @@ void ProBreeze::process_message_(Message message) {
         this->tank_full_ = data[3] && 0x01;
         this->has_valid_state_ = true;
         ESP_LOGD(TAG, "Temperature: %u, Humidity: %u, Tank Full: %s", this->temperature_, this->humidity_, this->tank_full_ ? "yes" : "no");
+
+        if (this->temperature_sensor_ != nullptr)
+            this->temperature_sensor_->publish_state(this->temperature_);
+        if (this->humidity_sensor_ != nullptr)
+            this->humidity_sensor_->publish_state(this->humidity_);
+
     } else if (message_type == 0x01) {
         // set outputs
         // if it was received then it was successful
-        ESP_LOGD(TAG, "Successfuly set outpus");
+        ESP_LOGD(TAG, "Successfuly set outputs");
     }
 }
 
