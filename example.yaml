@@ -1,0 +1,18 @@
+esphome:
+  name: probreeze
+  platform: ESP32
+  board: esp32dev
+
+logger:
+
+uart:
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 9600
+
+external_components:
+  - source: github://PedroSebastiao/esphome-probreeze-control-board
+    components: ["probreeze"]
+
+probreeze:
+
