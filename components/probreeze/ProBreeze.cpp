@@ -23,21 +23,12 @@ void ProBreeze::setup() {
 void ProBreeze::loop() {
     const uint32_t now = millis();
     if (now - this->last_transmission_ > SEND_EVERY_MILIS) {
-        // ESP_LOGD(TAG, "'%s': Will send state update command", this->get_name().c_str());
         ESP_LOGD(TAG, "Will send state update command");
-        // this->write_command_(this->state);
         this->last_transmission_ = now;
 
-        // discard all unread bytes
-        uint8_t byte;
-        while (this->available()) { 
-            this->read_byte(&byte);
-        }
-        this->rx_message_.clear();
-        
-        std::vector<uint8_t> data = { 0x10 };
-        Message msg(data);
-        this->write_array(msg.rawMessage());
+        this->send_message_data({ 0x10 }, true);
+
+        this->send_message_data({ 0x01, 0x00}, false);
     }
 
     while (this->available()) {
@@ -45,6 +36,20 @@ void ProBreeze::loop() {
         this->read_byte(&byte);
         this->handle_rx_byte_(byte);
     }
+}
+
+void ProBreeze::send_message_data(std::vector<uint8_t> data, bool discard_unread_bytes) {
+    if (discard_unread_bytes) {
+        // discard all unread bytes
+        uint8_t byte;
+        while (this->available()) { 
+            this->read_byte(&byte);
+        }
+        this->rx_message_.clear();
+    }
+    
+    Message message(data);
+    this->write_array(message.rawMessage());
 }
 
 void ProBreeze::handle_rx_byte_(uint8_t byte) {
@@ -79,11 +84,16 @@ void ProBreeze::process_message_(Message message) {
     uint8_t message_type = data[0];
 
     if (message_type == 0x10) {
+        // get inputs
         this->humidity_ = data[1];
         this->temperature_ = data[2];
         this->tank_full_ = data[3] && 0x01;
         this->has_valid_state_ = true;
         ESP_LOGD(TAG, "Temperature: %u, Humidity: %u, Tank Full: %s", this->temperature_, this->humidity_, this->tank_full_ ? "yes" : "no");
+    } else if (message_type == 0x01) {
+        // set outputs
+        // if it was received then it was successful
+        ESP_LOGD(TAG, "Successfuly set outpus");
     }
 }
 

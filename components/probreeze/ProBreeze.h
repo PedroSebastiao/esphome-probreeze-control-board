@@ -22,11 +22,11 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
         bool tank_full_;
 
         std::vector<uint8_t> rx_message_;
-
+        
+        void send_message_data(std::vector<uint8_t> data, bool discard_unread_bytes);
         void handle_rx_byte_(uint8_t byte);
         bool validate_rx_message_();
         void process_message_(Message message);
-//   void sendMessage
 };
 
 }  // namespace probreeze
