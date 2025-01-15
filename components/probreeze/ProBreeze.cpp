@@ -13,7 +13,11 @@ namespace probreeze {
 static const char *const TAG = "probreeze";
 
 void ProBreeze::setup() {
-ESP_LOGD("probreeze", "ProBreeze Component setup complete");
+    this->has_valid_state_ = false;
+    this->temperature_ = 0;
+    this->humidity_ = 0;
+    this->tank_full_ = true;
+    ESP_LOGD("probreeze", "ProBreeze Component setup complete");
 }
 
 void ProBreeze::loop() {
