@@ -30,7 +30,9 @@ void ProBreeze::loop() {
 
         // discard all unread bytes
         uint8_t byte;
-        while (this->read_byte(&byte)) { }
+        while (this->available()) { 
+            this->read_byte(&byte);
+        }
         this->rx_message_.clear();
         
         std::vector<uint8_t> data = { 0x10 };
@@ -69,6 +71,11 @@ bool ProBreeze::validate_rx_message_() {
     } else {
         return false;
     }
+}
+
+void ProBreeze::process_message_(Message message) {
+    auto data = message.data;
+    uint8_t message_type = data[0];
 }
 
 // void ProBreeze::sendMessage_(Message message) {

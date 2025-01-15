@@ -4,6 +4,8 @@
 #include "esphome/core/component.h"
 #include "esphome/core/log.h"
 
+#include "Message.h"
+
 namespace esphome {
 namespace probreeze {
 
@@ -23,6 +25,7 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
 
         void handle_rx_byte_(uint8_t byte);
         bool validate_rx_message_();
+        void process_message_(Message message);
 //   void sendMessage
 };
 

@@ -11,12 +11,13 @@ namespace probreeze {
 class Message {
   private:
     uint8_t size;
-    std::vector<std::uint8_t> data;
     uint8_t checksum;
 
     uint8_t calculateChecksum();
   
   public:
+    std::vector<std::uint8_t> data;
+    
     Message(std::vector<std::uint8_t> &data);
 
     // Function to return the full message as raw bytes
