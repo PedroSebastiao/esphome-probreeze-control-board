@@ -9,21 +9,11 @@ namespace probreeze {
 
 class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
  public:
-//   ProBreeze() : esphome::uart::UARTDevice(0) {}
+  void setup() override;
+  void loop() override;
 
-  void setup() override {
-    ESP_LOGD("probreeze", "ProBreeze Component setup complete");
-  }
-
-  void loop() override {
-    while (available()) {
-      char c = read();
-      ESP_LOGD("probreeze", "Received: %c", c);
-
-      // Echo received character back
-      write(c);
-    }
-  }
+ protected:
+  uint32_t last_transmission_;
 };
 
 }  // namespace probreeze
