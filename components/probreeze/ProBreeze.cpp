@@ -60,9 +60,10 @@ bool ProBreeze::validate_rx_message_() {
 
     if (size >= 2 && size == expectedSize) {
         std::vector<std::uint8_t> data(this->rx_message_.begin() + 1, this->rx_message_.end() - 1);
-        Message expectedMessage(data);
-        if (this->rx_message_ == expectedMessage.rawMessage()) {
+        Message message(data);
+        if (this->rx_message_ == message.rawMessage()) {
             ESP_LOGD(TAG, "Got message with valid checksum");
+            this->process_message_(message);
             return true;
         } else {
             ESP_LOGD(TAG, "Got message with INVALID checksum");
@@ -76,6 +77,14 @@ bool ProBreeze::validate_rx_message_() {
 void ProBreeze::process_message_(Message message) {
     auto data = message.data;
     uint8_t message_type = data[0];
+
+    if (message_type == 0x10) {
+        this->humidity_ = data[1];
+        this->temperature_ = data[2];
+        this->tank_full_ = data[3] && 0x01;
+        this->has_valid_state_ = true;
+        ESP_LOGD(TAG, "Temperature: %u, Humidity: %u, Tank Full: %s", this->temperature_, this->humidity_, this->tank_full_ ? "yes" : "no");
+    }
 }
 
 // void ProBreeze::sendMessage_(Message message) {
