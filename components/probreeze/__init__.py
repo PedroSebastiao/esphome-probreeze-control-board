@@ -1,12 +1,10 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import uart, sensor
+from esphome.components import uart, sensor, switch
 
 from esphome.const import (
     CONF_HUMIDITY,
     CONF_ID,
-    CONF_MODEL,
-    CONF_PIN,
     CONF_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
     UNIT_CELSIUS,
@@ -15,7 +13,7 @@ from esphome.const import (
     DEVICE_CLASS_HUMIDITY,
 )
 
-DEPENDENCIES = ["uart"]
+DEPENDENCIES = ["uart", "sensor", "switch"]
 
 # Declare the UART custom component namespace
 probreeze_ns = cg.esphome_ns.namespace('probreeze')
@@ -38,6 +36,14 @@ CONFIG_SCHEMA = (
                 device_class=DEVICE_CLASS_HUMIDITY,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
+            cv.Optional("switch"): switch.switch_schema(
+
+            )
+            .extend(
+                {
+                    cv.GenerateID(): cv.declare_id(switch.Switch),
+                }
+            ),
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
@@ -55,4 +61,8 @@ async def to_code(config):
         cg.add(var.set_temperature_sensor(sens))
     if CONF_HUMIDITY in config:
         sens = await sensor.new_sensor(config[CONF_HUMIDITY])
-        cg.add(var.set_humidity_sensor(sens))
+        cg.add(var.set_humidity_sensor(sens))\
+
+    if "switch" in config:
+        sw = await switch.new_switch(config["switch"])
+        cg.add(var.set_switch(sw))

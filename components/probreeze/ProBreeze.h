@@ -1,6 +1,7 @@
 #pragma once
 
 #include "esphome/components/sensor/sensor.h"
+#include "esphome/components/switch/switch.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 #include "esphome/core/log.h"
@@ -18,6 +19,8 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
         void set_temperature_sensor(sensor::Sensor *temperature_sensor) { temperature_sensor_ = temperature_sensor; }
         void set_humidity_sensor(sensor::Sensor *humidity_sensor) { humidity_sensor_ = humidity_sensor; }
 
+        void set_switch(switch_::Switch *input_switch) { switch_ = input_switch; }
+
     protected:
         uint32_t last_transmission_;
         bool has_valid_state_;
@@ -34,6 +37,8 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
         
         sensor::Sensor *temperature_sensor_{nullptr};
         sensor::Sensor *humidity_sensor_{nullptr};
+
+        switch_::Switch *switch_{nullptr};
 };
 
 }  // namespace probreeze

@@ -28,7 +28,11 @@ void ProBreeze::loop() {
 
         this->send_message_data({ 0x10 }, true);
 
-        this->send_message_data({ 0x01, 0x00}, false);
+        uint8_t output = 0x00;
+        if (this->switch_ != nullptr && this->switch_->state == true) {
+            output = 0b00001101;
+        }
+        this->send_message_data({ 0x01, output}, false);
     }
 
     while (this->available()) {
