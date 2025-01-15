@@ -1,12 +1,15 @@
 #pragma once
 
-#include "esphome.h"
+#include "esphome/components/uart/uart.h"
+#include "esphome/core/component.h"
+#include "esphome/core/log.h"
 
+namespace esphome {
 namespace probreeze {
 
-class ProBreeze : public Component, public UARTDevice {
+class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
  public:
-  ProBreeze() : ProBreeze(0) {}
+//   ProBreeze() : esphome::uart::UARTDevice(0) {}
 
   void setup() override {
     ESP_LOGD("probreeze", "ProBreeze Component setup complete");
@@ -24,3 +27,4 @@ class ProBreeze : public Component, public UARTDevice {
 };
 
 }  // namespace probreeze
+}  // namespace esphome
