@@ -30,8 +30,7 @@ void ProBreeze::loop() {
 
         std::vector<uint8_t> data = { 0x10 };
         Message msg(data);
-        Message::RawMessage rawMessage = msg.rawMessage();
-        this->write_array(rawMessage.bytes, rawMessage.totalSize);
+        this->write_array(msg.rawMessage());
     }
 }
 

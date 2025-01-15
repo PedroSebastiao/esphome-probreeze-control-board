@@ -11,27 +11,19 @@ namespace probreeze {
 class Message {
   private:
     uint8_t size;
-    uint8_t data[MAX_SERIAL_MESSAGE_SIZE - 2];
+    std::vector<std::uint8_t> data;
     uint8_t checksum;
 
     uint8_t calculateChecksum();
   
   public:
-    // Structure to hold the raw message and its size
-    struct RawMessage {
-        uint8_t bytes[MAX_SERIAL_MESSAGE_SIZE];
-        size_t totalSize;
-    };
-
-    Message(RawMessage rawMessage);
-    Message(uint8_t *inputData, size_t inputDataSize);
-    Message(std::vector<std::uint8_t> &data): Message(data.data(), data.size()) {}
+    Message(std::vector<std::uint8_t> &data);
 
     // Function to return the full message as raw bytes
-    RawMessage rawMessage();
+    std::vector<std::uint8_t> rawMessage();
 
     // Function to return a hex string representation of the raw message
-    std::string toHexString();
+    // std::string toHexString();
 };
 
 }}
