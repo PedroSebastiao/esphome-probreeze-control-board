@@ -28,9 +28,46 @@ void ProBreeze::loop() {
         // this->write_command_(this->state);
         this->last_transmission_ = now;
 
+        // discard all unread bytes
+        uint8_t byte;
+        while (this->read_byte(&byte)) { }
+        this->rx_message_.clear();
+        
         std::vector<uint8_t> data = { 0x10 };
         Message msg(data);
         this->write_array(msg.rawMessage());
+    }
+
+    while (this->available()) {
+        uint8_t byte;
+        this->read_byte(&byte);
+        this->handle_rx_byte_(byte);
+    }
+}
+
+void ProBreeze::handle_rx_byte_(uint8_t byte) {
+    this->rx_message_.push_back(byte);
+    if (this->validate_rx_message_()) {
+        this->rx_message_.clear();
+    }
+}
+
+bool ProBreeze::validate_rx_message_() {
+    uint8_t expectedSize = this->rx_message_.front();
+    uint8_t size = this->rx_message_.size();
+
+    if (size >= 2 && size == expectedSize) {
+        std::vector<std::uint8_t> data(this->rx_message_.begin() + 1, this->rx_message_.end() - 1);
+        Message expectedMessage(data);
+        if (this->rx_message_ == expectedMessage.rawMessage()) {
+            ESP_LOGD(TAG, "Got message with valid checksum");
+            return true;
+        } else {
+            ESP_LOGD(TAG, "Got message with INVALID checksum");
+            return false;
+        }
+    } else {
+        return false;
     }
 }
 
