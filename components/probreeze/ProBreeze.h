@@ -14,6 +14,7 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
 
  protected:
   uint32_t last_transmission_;
+//   void sendMessage
 };
 
 }  // namespace probreeze
