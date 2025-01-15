@@ -1,5 +1,7 @@
 #include "Message.h"
 
+#include <cstring>  // Include the header for memcpy
+
 namespace esphome {
 namespace probreeze {
 
@@ -61,4 +63,5 @@ std::string Message::toHexString() {
     return hexString;
 }
 
-}}
+}
+}

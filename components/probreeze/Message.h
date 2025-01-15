@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #define MAX_SERIAL_MESSAGE_SIZE 6
 
@@ -24,6 +25,7 @@ class Message {
 
     Message(RawMessage rawMessage);
     Message(uint8_t *inputData, size_t inputDataSize);
+    Message(std::vector<std::uint8_t> &data): Message(data.data(), data.size()) {}
 
     // Function to return the full message as raw bytes
     RawMessage rawMessage();

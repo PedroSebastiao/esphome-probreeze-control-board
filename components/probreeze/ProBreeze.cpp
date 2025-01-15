@@ -2,6 +2,9 @@
 
 #include "Message.h"
 
+#include <string>
+#include <vector>
+
 #define SEND_EVERY_MILIS 1000
 
 namespace esphome {
@@ -20,6 +23,11 @@ void ProBreeze::loop() {
         ESP_LOGD(TAG, "Will send state update command");
         // this->write_command_(this->state);
         this->last_transmission_ = now;
+
+        std::vector<uint8_t> data = { 0x10 };
+        Message msg(data);
+        Message::RawMessage rawMessage = msg.rawMessage();
+        this->write_array(rawMessage.bytes, rawMessage.totalSize);
     }
 }
 
