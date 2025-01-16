@@ -29,8 +29,19 @@ void ProBreeze::loop() {
         this->send_message_data({ 0x10 }, true);
 
         uint8_t output = 0x00;
-        if (this->switch_ != nullptr && this->switch_->state == true) {
-            output = 0b00001101;
+        if (this->compressor_state_) {
+            if (!this->fan_state_) {
+                this->fan_speed_ = HIGH;
+                this->fan_state_ = true;
+            }
+            output |= 0b00000100;
+        }
+        if (this->fan_state_) {
+            if (this->fan_speed_ == LOW) {
+                output |= 0b00001010;
+            } else {
+                output |= 0b00001001;
+            }
         }
         this->send_message_data({ 0x01, output}, false);
     }
@@ -107,30 +118,17 @@ void ProBreeze::process_message_(Message message) {
     }
 }
 
-// void ProBreeze::sendMessage_(Message message) {
+void ProBreeze::set_compressor_state(bool state) {
+    this->compressor_state_ = state;
+}
 
-// }
+void ProBreeze::set_fan_state(bool state) {
+    this->fan_state_ = state;
+}
 
-// void UARTSwitch::write_command_(bool state) {
-//     if (state && !this->data_on_.empty()) {
-//         ESP_LOGD(TAG, "'%s': Sending on data...", this->get_name().c_str());
-//         this->write_array(this->data_on_.data(), this->data_on_.size());
-//     }
-//     if (!state && !this->data_off_.empty()) {
-//         ESP_LOGD(TAG, "'%s': Sending off data...", this->get_name().c_str());
-//         this->write_array(this->data_off_.data(), this->data_off_.size());
-//     }
-// }
-
-// void ProBreeze::loop() {
-//     while (available()) {
-//         char c = read();
-//         ESP_LOGD("probreeze", "Received: %c", c);
-
-//         // Echo received character back
-//         write(c);
-//     }
-// }
+void ProBreeze::set_fan_speed(enum FanSpeed speed) {
+    this->fan_speed_ = speed;
+}
 
 
 }  // namespace probreeze

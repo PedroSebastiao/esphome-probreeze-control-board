@@ -1,7 +1,6 @@
 #pragma once
 
 #include "esphome/components/sensor/sensor.h"
-#include "esphome/components/switch/switch.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 #include "esphome/core/log.h"
@@ -19,7 +18,17 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
         void set_temperature_sensor(sensor::Sensor *temperature_sensor) { temperature_sensor_ = temperature_sensor; }
         void set_humidity_sensor(sensor::Sensor *humidity_sensor) { humidity_sensor_ = humidity_sensor; }
 
-        void set_switch(switch_::Switch *input_switch) { switch_ = input_switch; }
+        // void register_temperature_listener(const uint8_t &func);
+        // void register_humidity_listener(const uint8_t &func);
+
+        enum FanSpeed {
+            HIGH,
+            LOW,
+        };
+
+        void set_compressor_state(bool state);
+        void set_fan_state(bool state);
+        void set_fan_speed(enum FanSpeed speed);
 
     protected:
         uint32_t last_transmission_;
@@ -38,7 +47,12 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
         sensor::Sensor *temperature_sensor_{nullptr};
         sensor::Sensor *humidity_sensor_{nullptr};
 
-        switch_::Switch *switch_{nullptr};
+        bool compressor_state_{false};
+        bool fan_state_{false};
+        enum FanSpeed fan_speed_{HIGH};
+
+        // std::vector<std::function<void(uint8_t)>> temperature_listeners_;
+        // std::vector<std::function<void(uint8_t)>> humidity_listeners_;
 };
 
 }  // namespace probreeze
