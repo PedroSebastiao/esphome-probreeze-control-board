@@ -29,8 +29,10 @@ void ProBreeze::loop() {
         uint8_t output = 0x00;
         if (this->compressor_state_) {
             if (!this->fan_state_) {
-                this->fan_speed_ = HIGH;
-                this->fan_state_ = true;
+                this->set_fan_speed(HIGH);
+                this->set_fan_state(true);
+                // this->fan_speed_ = HIGH;
+                // this->fan_state_ = true;
             }
             output |= 0b00000100;
         }
@@ -123,14 +125,26 @@ void ProBreeze::process_message_(Message message) {
 
 void ProBreeze::set_compressor_state(bool state) {
     this->compressor_state_ = state;
+
+    for (auto &listener: this->compressor_state_listeners_) {
+        listener(this->compressor_state_);
+    }
 }
 
 void ProBreeze::set_fan_state(bool state) {
     this->fan_state_ = state;
+
+    for (auto &listener: this->fan_state_listeners_) {
+        listener(this->fan_state_);
+    }
 }
 
 void ProBreeze::set_fan_speed(enum FanSpeed speed) {
     this->fan_speed_ = speed;
+
+    for (auto &listener: this->fan_speed_listeners_) {
+        listener(this->fan_speed_);
+    }
 }
 
 void ProBreeze::register_temperature_listener(const std::function<void(uint8_t)> &listener) {
@@ -149,6 +163,24 @@ void ProBreeze::register_tank_full_listener(const std::function<void(bool)> &lis
     this->tank_full_listeners_.push_back(listener);
 
     listener(this->tank_full_);
+}
+
+void ProBreeze::register_compressor_state_listener(const std::function<void(bool)> &listener) {
+    this->compressor_state_listeners_.push_back(listener);
+
+    listener(this->compressor_state_);
+}
+
+void ProBreeze::register_fan_state_listener(const std::function<void(bool)> &listener) {
+    this->fan_state_listeners_.push_back(listener);
+
+    listener(this->fan_state_);
+}
+
+void ProBreeze::register_fan_speed_listener(const std::function<void(enum FanSpeed)> &listener) {
+    this->fan_speed_listeners_.push_back(listener);
+
+    listener(this->fan_speed_);
 }
 
 

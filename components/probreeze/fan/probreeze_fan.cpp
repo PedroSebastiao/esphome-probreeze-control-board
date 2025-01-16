@@ -7,7 +7,14 @@ namespace probreeze {
 static const char *const TAG = "tuya.fan";
 
 void ProBreezeFan::setup() {
-
+  this->parent_->register_fan_state_listener([this](bool state) {
+    this->state = state;
+    this->publish_state();
+  });
+  this->parent_->register_fan_speed_listener([this](ProBreeze::FanSpeed speed) {
+    this->speed = speed;
+    this->publish_state();
+  });
 }
 
 fan::FanTraits ProBreezeFan::get_traits() {
