@@ -1,7 +1,7 @@
 from esphome.components import sensor
 import esphome.config_validation as cv
 import esphome.codegen as cg
-from esphome.const import CONF_ID, CONF_SENSOR_DATAPOINT
+from esphome.const import CONF_ID
 from .. import probreeze_ns, CONF_PROBREEZE_ID, ProBreeze
 
 from esphome.const import (
@@ -17,12 +17,12 @@ from esphome.const import (
 
 DEPENDENCIES = ["probreeze"]
 
-ProBreezeSensor = probreeze_ns.class_("ProBreezeSensor", sensor.Sensor, cg.Component)
+ProBreezeSensor = probreeze_ns.class_("ProBreezeSensor", cg.Component)
 
 CONFIG_SCHEMA = (
-    sensor.sensor_schema(ProBreezeSensor)
-    .extend(
+    cv.Schema(
         {
+            cv.GenerateID(): cv.declare_id(ProBreezeSensor),
             cv.GenerateID(CONF_PROBREEZE_ID): cv.use_id(ProBreeze),
             cv.Optional(CONF_TEMPERATURE): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
@@ -45,7 +45,6 @@ CONFIG_SCHEMA = (
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
-    await sensor.register_sensor(var, config)
 
     paren = await cg.get_variable(config[CONF_PROBREEZE_ID])
     cg.add(var.set_probreeze_parent(paren))

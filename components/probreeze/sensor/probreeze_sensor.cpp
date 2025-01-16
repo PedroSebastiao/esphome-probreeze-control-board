@@ -23,6 +23,12 @@ void ProBreezeSensor::setup() {
   //     this->publish_state(datapoint.value_bitmask);
   //   }
   // });
+  this->parent_->register_temperature_listener([this](uint8_t temperature) {
+    this->temperature_sensor_->publish_state(temperature);
+  });
+  this->parent_->register_humidity_listener([this](uint8_t humidity) {
+    this->humidity_sensor_->publish_state(humidity);
+  });
 }
 
 }  // namespace probreeze

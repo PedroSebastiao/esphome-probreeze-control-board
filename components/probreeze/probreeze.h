@@ -14,8 +14,8 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
         void setup() override;
         void loop() override;
 
-        // void register_temperature_listener(const uint8_t &func);
-        // void register_humidity_listener(const uint8_t &func);
+        void register_temperature_listener(const std::function<void(uint8_t)> &listener);
+        void register_humidity_listener(const std::function<void(uint8_t)> &listener);
 
         enum FanSpeed {
             HIGH,
@@ -44,8 +44,8 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
         bool fan_state_{false};
         enum FanSpeed fan_speed_{HIGH};
 
-        // std::vector<std::function<void(uint8_t)>> temperature_listeners_;
-        // std::vector<std::function<void(uint8_t)>> humidity_listeners_;
+        std::vector<std::function<void(uint8_t)>> temperature_listeners_;
+        std::vector<std::function<void(uint8_t)>> humidity_listeners_;
 };
 
 }  // namespace probreeze

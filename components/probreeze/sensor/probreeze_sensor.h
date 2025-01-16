@@ -7,7 +7,7 @@
 namespace esphome {
 namespace probreeze {
 
-class ProBreezeSensor : public sensor::Sensor, public Component {
+class ProBreezeSensor : public Component {
  public:
   void setup() override;
 
@@ -18,7 +18,7 @@ class ProBreezeSensor : public sensor::Sensor, public Component {
 
  protected:
   ProBreeze *parent_;
-  
+
   sensor::Sensor *temperature_sensor_{nullptr};
   sensor::Sensor *humidity_sensor_{nullptr};
 };

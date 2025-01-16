@@ -104,6 +104,12 @@ void ProBreeze::process_message_(Message message) {
         this->has_valid_state_ = true;
         ESP_LOGD(TAG, "Temperature: %u, Humidity: %u, Tank Full: %s", this->temperature_, this->humidity_, this->tank_full_ ? "yes" : "no");
 
+        for (auto &listener: this->temperature_listeners_) {
+            listener(this->temperature_);
+        }
+        for (auto &listener: this->humidity_listeners_) {
+            listener(this->humidity_);
+        }
         // if (this->temperature_sensor_ != nullptr)
         //     this->temperature_sensor_->publish_state(this->temperature_);
         // if (this->humidity_sensor_ != nullptr)
@@ -126,6 +132,18 @@ void ProBreeze::set_fan_state(bool state) {
 
 void ProBreeze::set_fan_speed(enum FanSpeed speed) {
     this->fan_speed_ = speed;
+}
+
+void ProBreeze::register_temperature_listener(const std::function<void(uint8_t)> &listener) {
+    this->temperature_listeners_.push_back(listener);
+
+    listener(this->temperature_);
+}
+
+void ProBreeze::register_humidity_listener(const std::function<void(uint8_t)> &listener) {
+    this->humidity_listeners_.push_back(listener);
+
+    listener(this->humidity_);
 }
 
 
