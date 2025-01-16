@@ -12,7 +12,11 @@ void ProBreezeFan::setup() {
     this->publish_state();
   });
   this->parent_->register_fan_speed_listener([this](ProBreeze::FanSpeed speed) {
-    this->speed = speed;
+    if (speed == ProBreeze::FanSpeed::LOW) {
+      this->speed = 1;
+    } else if (speed == ProBreeze::FanSpeed::HIGH) {
+      this->speed = 2;
+    }
     this->publish_state();
   });
 }
@@ -26,9 +30,10 @@ void ProBreezeFan::control(const fan::FanCall &call) {
     bool state = *call.get_state();
     
     if (call.get_speed().has_value()) {
-      if (*call.get_speed() == 1) {
+      int speed = *call.get_speed();
+      if (speed == 1) {
         this->parent_->set_fan_speed(ProBreeze::FanSpeed::LOW);
-      } else {
+      } else if (speed == 2) {
         this->parent_->set_fan_speed(ProBreeze::FanSpeed::HIGH);
       }
       this->parent_->set_fan_state(state);
