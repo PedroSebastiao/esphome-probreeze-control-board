@@ -1,6 +1,4 @@
-#include "ProBreeze.h"
-
-#include "Message.h"
+#include "probreeze.h"
 
 #include <string>
 #include <vector>
@@ -106,10 +104,10 @@ void ProBreeze::process_message_(Message message) {
         this->has_valid_state_ = true;
         ESP_LOGD(TAG, "Temperature: %u, Humidity: %u, Tank Full: %s", this->temperature_, this->humidity_, this->tank_full_ ? "yes" : "no");
 
-        if (this->temperature_sensor_ != nullptr)
-            this->temperature_sensor_->publish_state(this->temperature_);
-        if (this->humidity_sensor_ != nullptr)
-            this->humidity_sensor_->publish_state(this->humidity_);
+        // if (this->temperature_sensor_ != nullptr)
+        //     this->temperature_sensor_->publish_state(this->temperature_);
+        // if (this->humidity_sensor_ != nullptr)
+        //     this->humidity_sensor_->publish_state(this->humidity_);
 
     } else if (message_type == 0x01) {
         // set outputs

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "esphome/core/component.h"
-#include "esphome/components/probreeze/ProBreeze.h"
+#include "esphome/components/probreeze/probreeze.h"
 #include "esphome/components/switch/switch.h"
 
 namespace esphome {

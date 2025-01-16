@@ -1,11 +1,10 @@
 #pragma once
 
-#include "esphome/components/sensor/sensor.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 #include "esphome/core/log.h"
 
-#include "Message.h"
+#include "message.h"
 
 namespace esphome {
 namespace probreeze {
@@ -14,9 +13,6 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
     public:
         void setup() override;
         void loop() override;
-
-        void set_temperature_sensor(sensor::Sensor *temperature_sensor) { temperature_sensor_ = temperature_sensor; }
-        void set_humidity_sensor(sensor::Sensor *humidity_sensor) { humidity_sensor_ = humidity_sensor; }
 
         // void register_temperature_listener(const uint8_t &func);
         // void register_humidity_listener(const uint8_t &func);
@@ -43,9 +39,6 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
         void handle_rx_byte_(uint8_t byte);
         bool validate_rx_message_();
         void process_message_(Message message);
-        
-        sensor::Sensor *temperature_sensor_{nullptr};
-        sensor::Sensor *humidity_sensor_{nullptr};
 
         bool compressor_state_{false};
         bool fan_state_{false};
