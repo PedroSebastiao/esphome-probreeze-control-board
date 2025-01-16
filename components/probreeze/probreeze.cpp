@@ -110,10 +110,9 @@ void ProBreeze::process_message_(Message message) {
         for (auto &listener: this->humidity_listeners_) {
             listener(this->humidity_);
         }
-        // if (this->temperature_sensor_ != nullptr)
-        //     this->temperature_sensor_->publish_state(this->temperature_);
-        // if (this->humidity_sensor_ != nullptr)
-        //     this->humidity_sensor_->publish_state(this->humidity_);
+        for (auto &listener: this->tank_full_listeners_) {
+            listener(this->tank_full_);
+        }
 
     } else if (message_type == 0x01) {
         // set outputs
@@ -144,6 +143,12 @@ void ProBreeze::register_humidity_listener(const std::function<void(uint8_t)> &l
     this->humidity_listeners_.push_back(listener);
 
     listener(this->humidity_);
+}
+
+void ProBreeze::register_tank_full_listener(const std::function<void(bool)> &listener) {
+    this->tank_full_listeners_.push_back(listener);
+
+    listener(this->tank_full_);
 }
 
 
