@@ -3,7 +3,8 @@
 #include <string>
 #include <vector>
 
-#define SEND_EVERY_MILIS 1000
+#define SEND_EVERY_MILLIS 1000
+#define DEBOUNCE_TIME 3000
 
 namespace esphome {
 namespace probreeze {
@@ -11,16 +12,17 @@ namespace probreeze {
 static const char *const TAG = "probreeze";
 
 void ProBreeze::setup() {
-    this->has_valid_state_ = false;
-    this->temperature_ = 0;
-    this->humidity_ = 0;
-    this->tank_full_ = true;
     ESP_LOGD("probreeze", "ProBreeze Component setup complete");
 }
 
 void ProBreeze::loop() {
     const uint32_t now = millis();
-    if (now - this->last_transmission_ > SEND_EVERY_MILIS) {
+
+    if (this->tank_full_debounced_ && this->compressor_state_) {
+        this->set_compressor_state(false);
+    }
+
+    if (now - this->last_transmission_ > SEND_EVERY_MILLIS) {
         ESP_LOGD(TAG, "Will send state update command");
         this->last_transmission_ = now;
 
@@ -102,9 +104,20 @@ void ProBreeze::process_message_(Message message) {
         // get inputs
         this->humidity_ = data[1];
         this->temperature_ = data[2];
-        this->tank_full_ = data[3] && 0x01;
+
+        bool tank_full = data[3] && 0x01;
+
+        if (tank_full != this->tank_full_) {
+            this->tank_full_last_state_change_ = millis();
+            this->tank_full_ = tank_full;
+        } else {
+            if (millis() >= tank_full_last_state_change_ + DEBOUNCE_TIME) {
+                this->tank_full_debounced_ = this->tank_full_;
+            }
+        }
+
         this->has_valid_state_ = true;
-        ESP_LOGD(TAG, "Temperature: %u, Humidity: %u, Tank Full: %s", this->temperature_, this->humidity_, this->tank_full_ ? "yes" : "no");
+        ESP_LOGD(TAG, "Temperature: %u, Humidity: %u, Tank Full: %s, Tank Full (Debounced): %s", this->temperature_, this->humidity_, this->tank_full_ ? "yes" : "no", this->tank_full_debounced_ ? "yes" : "no");
 
         for (auto &listener: this->temperature_listeners_) {
             listener(this->temperature_);
@@ -113,7 +126,7 @@ void ProBreeze::process_message_(Message message) {
             listener(this->humidity_);
         }
         for (auto &listener: this->tank_full_listeners_) {
-            listener(this->tank_full_);
+            listener(this->tank_full_debounced_);
         }
 
     } else if (message_type == 0x01) {
@@ -124,6 +137,16 @@ void ProBreeze::process_message_(Message message) {
 }
 
 void ProBreeze::set_compressor_state(bool state) {
+    if (state && !this->has_valid_state_) {
+        // don't allow compressor to turn on without a valid state
+        return;
+    }
+
+    if (state && this->tank_full_debounced_) {
+        // don't allow compressor to turn on with a full tank
+        return;
+    }
+
     this->compressor_state_ = state;
 
     for (auto &listener: this->compressor_state_listeners_) {

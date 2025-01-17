@@ -32,10 +32,12 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
 
     protected:
         uint32_t last_transmission_;
-        bool has_valid_state_;
-        int8_t temperature_;
-        uint8_t humidity_;
-        bool tank_full_;
+        bool has_valid_state_{false};
+        int8_t temperature_{-128};
+        uint8_t humidity_{255};
+        bool tank_full_{true};
+        uint32_t tank_full_last_state_change_{0xFFFFFFFF};
+        bool tank_full_debounced_{true};
 
         std::vector<uint8_t> rx_message_;
         
