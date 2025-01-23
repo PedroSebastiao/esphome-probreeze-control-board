@@ -12,11 +12,19 @@ namespace probreeze {
 static const char *const TAG = "probreeze";
 
 void ProBreeze::setup() {
+    this->set_power_state(false);
+    this->set_compressor_state(false);
+    this->set_fan_state(false);
+    this->set_fan_speed(HIGH);
     ESP_LOGD("probreeze", "ProBreeze Component setup complete");
 }
 
 void ProBreeze::loop() {
     const uint32_t now = millis();
+
+    if (now >= this->tank_full_last_state_change_ + DEBOUNCE_TIME) {
+        this->set_tank_full_debounced(this->tank_full_);
+    }
 
     if (this->tank_full_debounced_) {
         this->set_compressor_state(false);
@@ -102,32 +110,15 @@ void ProBreeze::process_message_(Message message) {
 
     if (message_type == 0x10) {
         // get inputs
-        this->humidity_ = data[1];
-        this->temperature_ = data[2];
+        this->set_humidity(data[1]);
+        this->set_temperature(data[2]);
+        
 
         bool tank_full = data[3] && 0x01;
-
-        if (tank_full != this->tank_full_) {
-            this->tank_full_last_state_change_ = millis();
-            this->tank_full_ = tank_full;
-        } else {
-            if (millis() >= tank_full_last_state_change_ + DEBOUNCE_TIME) {
-                this->tank_full_debounced_ = this->tank_full_;
-            }
-        }
+        this->set_tank_full(tank_full);
 
         this->has_valid_state_ = true;
         ESP_LOGD(TAG, "Temperature: %u, Humidity: %u, Tank Full: %s, Tank Full (Debounced): %s", this->temperature_, this->humidity_, this->tank_full_ ? "yes" : "no", this->tank_full_debounced_ ? "yes" : "no");
-
-        for (auto &listener: this->temperature_listeners_) {
-            listener(this->temperature_);
-        }
-        for (auto &listener: this->humidity_listeners_) {
-            listener(this->humidity_);
-        }
-        for (auto &listener: this->tank_full_listeners_) {
-            listener(this->tank_full_debounced_);
-        }
 
     } else if (message_type == 0x01) {
         // set outputs
@@ -137,32 +128,10 @@ void ProBreeze::process_message_(Message message) {
 }
 
 void ProBreeze::set_power_state(bool state) {
-    if (this->power_state_ == state) {
-        return;
-    }
-
     this->power_state_ = state;
 
-    for (auto &listener: this->compressor_state_listeners_) {
+    for (auto &listener: this->power_state_listeners_) {
         listener(this->power_state_);
-    }
-}
-
-void ProBreeze::set_compressor_state(bool state) {
-    if (state && !this->has_valid_state_) {
-        // don't allow compressor to turn on without a valid state
-        return;
-    }
-
-    if (state && this->tank_full_debounced_) {
-        // don't allow compressor to turn on with a full tank
-        return;
-    }
-
-    this->compressor_state_ = state;
-
-    for (auto &listener: this->compressor_state_listeners_) {
-        listener(this->compressor_state_);
     }
 }
 
@@ -182,6 +151,58 @@ void ProBreeze::set_fan_speed(enum FanSpeed speed) {
     }
 }
 
+
+void ProBreeze::set_temperature(int8_t temperature) {
+    this->temperature_ = temperature;
+
+    for (auto &listener: this->temperature_listeners_) {
+        listener(this->temperature_);
+    }
+}
+
+void ProBreeze::set_humidity(int8_t humidity) {
+    this->humidity_ = humidity;
+
+    for (auto &listener: this->humidity_listeners_) {
+        listener(this->humidity_);
+    }
+}
+
+void ProBreeze::set_tank_full(bool tank_full) {
+    bool changed = this->tank_full_ != tank_full;
+
+    this->tank_full_ = tank_full;
+
+    for (auto &listener: this->tank_full_listeners_) {
+        listener(this->tank_full_);
+    }
+
+    if (changed) {
+        this->set_tank_full_last_state_change(millis());
+    }
+}
+
+void ProBreeze::set_tank_full_debounced(bool tank_full_debounced) {
+    this->tank_full_debounced_ = tank_full_debounced;
+
+    for (auto &listener: this->tank_full_debounced_listeners_) {
+        listener(this->tank_full_debounced_);
+    }
+}
+
+void ProBreeze::set_tank_full_last_state_change(uint32_t tank_full_last_state_change) {
+    this->tank_full_last_state_change_ = tank_full_last_state_change;
+}
+
+void ProBreeze::set_compressor_state(bool compressor_state) {
+    this->compressor_state_ = compressor_state;
+
+    for (auto &listener: this->compressor_state_listeners_) {
+        listener(this->compressor_state_);
+    }
+}
+
+
 void ProBreeze::register_temperature_listener(const std::function<void(uint8_t)> &listener) {
     this->temperature_listeners_.push_back(listener);
 
@@ -198,6 +219,12 @@ void ProBreeze::register_tank_full_listener(const std::function<void(bool)> &lis
     this->tank_full_listeners_.push_back(listener);
 
     listener(this->tank_full_);
+}
+
+void ProBreeze::register_tank_full_debounced_listener(const std::function<void(bool)> &listener) {
+    this->tank_full_debounced_listeners_.push_back(listener);
+
+    listener(this->tank_full_debounced_);
 }
 
 void ProBreeze::register_power_state_listener(const std::function<void(bool)> &listener) {

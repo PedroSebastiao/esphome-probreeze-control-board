@@ -22,6 +22,7 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
         void register_temperature_listener(const std::function<void(uint8_t)> &listener);
         void register_humidity_listener(const std::function<void(uint8_t)> &listener);
         void register_tank_full_listener(const std::function<void(bool)> &listener);
+        void register_tank_full_debounced_listener(const std::function<void(bool)> &listener);
 
         void register_power_state_listener(const std::function<void(bool)> &listener);
         void register_compressor_state_listener(const std::function<void(bool)> &listener);
@@ -48,6 +49,11 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
         bool validate_rx_message_();
         void process_message_(Message message);
 
+        void set_temperature(int8_t temperature);
+        void set_humidity(int8_t humidity);
+        void set_tank_full(bool tank_full);
+        void set_tank_full_debounced(bool tank_full_debounced);
+        void set_tank_full_last_state_change(uint32_t tank_full_last_state_change);
         void set_compressor_state(bool state);
 
         bool power_state_{false};
@@ -58,6 +64,7 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
         std::vector<std::function<void(uint8_t)>> temperature_listeners_;
         std::vector<std::function<void(uint8_t)>> humidity_listeners_;
         std::vector<std::function<void(bool)>> tank_full_listeners_;
+        std::vector<std::function<void(bool)>> tank_full_debounced_listeners_;
 
         std::vector<std::function<void(bool)>> power_state_listeners_;
         std::vector<std::function<void(bool)>> compressor_state_listeners_;
