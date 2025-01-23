@@ -18,8 +18,10 @@ void ProBreeze::setup() {
 void ProBreeze::loop() {
     const uint32_t now = millis();
 
-    if (this->tank_full_debounced_ && this->compressor_state_) {
+    if (this->tank_full_debounced_) {
         this->set_compressor_state(false);
+    } else {
+        this->set_compressor_state(this->power_state_);
     }
 
     if (now - this->last_transmission_ > SEND_EVERY_MILLIS) {
@@ -33,8 +35,6 @@ void ProBreeze::loop() {
             if (!this->fan_state_) {
                 this->set_fan_speed(HIGH);
                 this->set_fan_state(true);
-                // this->fan_speed_ = HIGH;
-                // this->fan_state_ = true;
             }
             output |= 0b00000100;
         }
@@ -136,6 +136,18 @@ void ProBreeze::process_message_(Message message) {
     }
 }
 
+void ProBreeze::set_power_state(bool state) {
+    if (this->power_state_ == state) {
+        return;
+    }
+
+    this->power_state_ = state;
+
+    for (auto &listener: this->compressor_state_listeners_) {
+        listener(this->power_state_);
+    }
+}
+
 void ProBreeze::set_compressor_state(bool state) {
     if (state && !this->has_valid_state_) {
         // don't allow compressor to turn on without a valid state
@@ -186,6 +198,12 @@ void ProBreeze::register_tank_full_listener(const std::function<void(bool)> &lis
     this->tank_full_listeners_.push_back(listener);
 
     listener(this->tank_full_);
+}
+
+void ProBreeze::register_power_state_listener(const std::function<void(bool)> &listener) {
+    this->power_state_listeners_.push_back(listener);
+
+    listener(this->power_state_);
 }
 
 void ProBreeze::register_compressor_state_listener(const std::function<void(bool)> &listener) {

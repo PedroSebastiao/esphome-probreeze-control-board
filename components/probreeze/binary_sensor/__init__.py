@@ -6,6 +6,7 @@ from .. import probreeze_ns, CONF_PROBREEZE_ID, ProBreeze
 from esphome.const import (
     CONF_ID,
     DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_RUNNING,
 )
 
 DEPENDENCIES = ["probreeze"]
@@ -13,6 +14,7 @@ DEPENDENCIES = ["probreeze"]
 ProBreezeBinarySensor = probreeze_ns.class_("ProBreezeBinarySensor", cg.Component)
 
 CONF_TANK_FULL = "tank_full"
+CONF_COMPRESSOR = "compressor"
 CONFIG_SCHEMA = (
     cv.Schema(
         {
@@ -20,6 +22,9 @@ CONFIG_SCHEMA = (
             cv.GenerateID(CONF_PROBREEZE_ID): cv.use_id(ProBreeze),
             cv.Optional(CONF_TANK_FULL): binary_sensor.binary_sensor_schema(
                 device_class=DEVICE_CLASS_PROBLEM,
+            ),
+            cv.Optional(CONF_COMPRESSOR): binary_sensor.binary_sensor_schema(
+                device_class=DEVICE_CLASS_RUNNING,
             ),
         }
     )
@@ -37,3 +42,7 @@ async def to_code(config):
     if CONF_TANK_FULL in config:
         sens = await binary_sensor.new_binary_sensor(config[CONF_TANK_FULL])
         cg.add(var.set_tank_full_binary_sensor(sens))
+
+    if CONF_COMPRESSOR in config:
+        sens = await binary_sensor.new_binary_sensor(config[CONF_COMPRESSOR])
+        cg.add(var.set_compressor_binary_sensor(sens))
