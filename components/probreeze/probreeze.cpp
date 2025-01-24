@@ -3,8 +3,9 @@
 #include <string>
 #include <vector>
 
-#define SEND_EVERY_MILLIS 1000
-#define DEBOUNCE_TIME 3000
+#define SEND_EVERY_MILLIS 1000 // 1s
+#define DEBOUNCE_TIME 3000 // 3s
+#define FAN_DELAY_AFTER_COMPRESSOR_STOP 1000 * 60 * 5 // 5min
 
 namespace esphome {
 namespace probreeze {
@@ -16,21 +17,23 @@ void ProBreeze::setup() {
     this->set_compressor_state(false);
     this->set_fan_state(false);
     this->set_fan_speed(HIGH);
+
+    const uint32_t now = millis();
+    this->set_compressor_state_last_state_change(now);
+
     ESP_LOGD("probreeze", "ProBreeze Component setup complete");
 }
 
 void ProBreeze::loop() {
     const uint32_t now = millis();
 
-    if (now >= this->tank_full_last_state_change_ + DEBOUNCE_TIME) {
-        this->set_tank_full_debounced(this->tank_full_);
-    }
+    // // tank full debouncer
+    // if (now >= this->tank_full_last_state_change_ + DEBOUNCE_TIME) {
+    //     if (this->tank_full_debounced_ != this->tank_full_) {
+    //         this->set_tank_full_debounced(this->tank_full_);
+    //     }
+    // }
 
-    if (this->tank_full_debounced_) {
-        this->set_compressor_state(false);
-    } else {
-        this->set_compressor_state(this->power_state_);
-    }
 
     if (now - this->last_transmission_ > SEND_EVERY_MILLIS) {
         ESP_LOGD(TAG, "Will send state update command");
@@ -40,11 +43,11 @@ void ProBreeze::loop() {
 
         uint8_t output = 0x00;
         if (this->compressor_state_) {
-            if (!this->fan_state_) {
-                this->set_fan_speed(HIGH);
-                this->set_fan_state(true);
-            }
             output |= 0b00000100;
+            if (!this->fan_state_) {
+                // failsafe to never let the compressor run without fan
+                output |= 0b00001001; // set to HIGH
+            }
         }
         if (this->fan_state_) {
             if (this->fan_speed_ == LOW) {
@@ -133,9 +136,22 @@ void ProBreeze::set_power_state(bool state) {
     for (auto &listener: this->power_state_listeners_) {
         listener(this->power_state_);
     }
+
+    // turn off fan when turning off power
+    this->set_fan_state(false);
 }
 
 void ProBreeze::set_fan_state(bool state) {
+    if (!state) {
+        if (this->compressor_state_) {
+            // don't let to turn off the fan if the compressor is on
+            return;
+        } else if (millis() < this->compressor_state_last_state_change_ + FAN_DELAY_AFTER_COMPRESSOR_STOP) {
+            // don't let to turn off the fan for the delay after compressor last off
+            return;
+        }
+    }
+
     this->fan_state_ = state;
 
     for (auto &listener: this->fan_state_listeners_) {
@@ -179,6 +195,11 @@ void ProBreeze::set_tank_full(bool tank_full) {
 
     if (changed) {
         this->set_tank_full_last_state_change(millis());
+
+        this->cancel_timeout("tank_full_debounce");
+        this->set_timeout("tank_full_debounce", DEBOUNCE_TIME, [this]() {
+            this->set_tank_full_debounced(this->tank_full_);
+        });
     }
 }
 
@@ -188,6 +209,14 @@ void ProBreeze::set_tank_full_debounced(bool tank_full_debounced) {
     for (auto &listener: this->tank_full_debounced_listeners_) {
         listener(this->tank_full_debounced_);
     }
+
+    if (this->tank_full_debounced_) {
+        // if tank is full, don't run compressor
+        this->set_compressor_state(false);
+    } else {
+        // else set compressor state to same as power state
+        this->set_compressor_state(this->power_state_);
+    }
 }
 
 void ProBreeze::set_tank_full_last_state_change(uint32_t tank_full_last_state_change) {
@@ -195,11 +224,34 @@ void ProBreeze::set_tank_full_last_state_change(uint32_t tank_full_last_state_ch
 }
 
 void ProBreeze::set_compressor_state(bool compressor_state) {
+    bool changed = this->compressor_state_ != compressor_state;
+
     this->compressor_state_ = compressor_state;
 
     for (auto &listener: this->compressor_state_listeners_) {
         listener(this->compressor_state_);
     }
+
+    if (changed) {
+        this->set_compressor_state_last_state_change(millis());
+
+        this->cancel_timeout("fan_delayed_off");
+        if (!this->compressor_state_) {
+            // setup delayed fan off
+            this->set_timeout("fan_delayed_off", FAN_DELAY_AFTER_COMPRESSOR_STOP, [this]() {
+                this->set_fan_state(false);
+            });
+        }
+    }
+
+    if (this->compressor_state_ && !this->fan_state_) {
+        // make sure we always have the fan on with the compressor
+        this->set_fan_state(true);
+    }
+}
+
+void ProBreeze::set_compressor_state_last_state_change(uint32_t compressor_state_last_state_change) {
+    this->compressor_state_last_state_change_ = compressor_state_last_state_change;
 }
 
 

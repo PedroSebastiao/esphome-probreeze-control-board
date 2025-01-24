@@ -55,9 +55,11 @@ class ProBreeze : public esphome::Component, public esphome::uart::UARTDevice {
         void set_tank_full_debounced(bool tank_full_debounced);
         void set_tank_full_last_state_change(uint32_t tank_full_last_state_change);
         void set_compressor_state(bool state);
+        void set_compressor_state_last_state_change(uint32_t compressor_state_last_state_change);
 
         bool power_state_{false};
         bool compressor_state_{false};
+        uint32_t compressor_state_last_state_change_{0xFFFFFFFF};
         bool fan_state_{false};
         enum FanSpeed fan_speed_{HIGH};
 
